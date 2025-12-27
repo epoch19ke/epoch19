@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Epoch19 | Global COVID-19 Data Archive</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+    <style>
+        /* --- 1. CONFIGURATION --- */
+        :root {
+            --bg-deep: #020617;
+            --primary: #0EA5E9; /* Sky Blue */
+            --primary-glow: rgba(14, 165, 233, 0.5);
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+            --glass-surface: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- 2. FIXED BACKGROUND (Fixed Visibility) --- */
+        .bg-wrapper {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -5;
+            /* Lighter gradient so image shows through */
+            background: 
+                linear-gradient(to bottom, rgba(2, 6, 23, 0.4), rgba(2, 6, 23, 0.8)),
+                url('assets/images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* --- 3. ANIMATED PARTICLES (New Advanced Feature) --- */
+        .particles {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -4; pointer-events: none; overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 10s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        /* --- 4. NAVIGATION --- */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 1rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(12px);
+            background: rgba(2, 6, 23, 0.2);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.4rem; }
+        .logo img { height: 32px; }
+        
+        .btn-signin {
+            padding: 0.5rem 1.2rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem; font-weight: 600;
+            background: rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+        .btn-signin:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* --- 5. HERO SECTION (Layout Fix: Removed Gap) --- */
+        .hero {
+            position: relative;
+            /* Top padding clears header, Bottom padding flows into features */
+            padding: 140px 20px 60px 20px; 
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            /* NO min-height: 100vh here, this fixes the mobile gap */
+        }
+
+        .hero h1 {
+            font-size: 3.5rem; line-height: 1.1; font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            max-width: 800px;
+        }
+
+        .hero p {
+            font-size: 1.1rem; color: var(--text-muted);
+            max-width: 600px; margin-bottom: 2.5rem;
+            line-height: 1.5;
+        }
+
+        .btn-primary {
+            padding: 1rem 3rem;
+            background: var(--primary);
+            color: white; text-decoration: none;
+            border-radius: 50px; font-weight: 700; font-size: 1.1rem;
+            box-shadow: 0 0 25px var(--primary-glow);
+            transition: transform 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 0 40px var(--primary-glow); }
+
+        /* --- 6. LIVE TICKER (New Feature) --- */
+        .ticker-wrap {
+            width: 100%; background: rgba(0,0,0,0.3);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            overflow: hidden; white-space: nowrap;
+            padding: 10px 0; margin-bottom: 3rem;
+        }
+        .ticker { display: inline-block; animation: ticker 30s linear infinite; }
+        .ticker-item {
+            display: inline-block; padding: 0 2rem;
+            color: var(--text-muted); font-family: monospace; font-size: 0.9rem;
+        }
+        .ticker-item span { color: var(--primary); font-weight: bold; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* --- 7. FEATURES (Cards) --- */
+        .features {
+            padding: 0 5% 4rem 5%; /* Top padding removed to close gap */
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem; max-width: 1200px; margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--glass-surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            padding: 2rem; border-radius: 16px;
+        }
+        
+        .icon-box {
+            width: 45px; height: 45px;
+            background: rgba(14, 165, 233, 0.15);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            color: var(--primary); font-size: 1.5rem; margin-bottom: 1rem;
+        }
+
+        .feature-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .feature-card p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+
+        /* --- 8. FOOTER --- */
+        footer {
+            border-top: 1px solid var(--glass-border);
+            padding: 2rem; text-align: center;
+            background: rgba(2, 6, 23, 0.8);
+            font-size: 0.9rem; color: var(--text-muted);
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .hero { padding-top: 120px; padding-bottom: 40px; } /* Tighter mobile spacing */
+            .ticker-wrap { margin-bottom: 2rem; }
+            .features { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background & Particles -->
+    <div class="bg-wrapper"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Nav -->
+    <nav>
+        <div class="logo">
+            <img src="assets/images/logo.png" alt="Icon">
+            <span>Epoch19</span>
+        </div>
+        <a href="login.html" class="btn-signin">Sign In</a>
+    </nav>
+
+    <!-- Main Hero -->
+    <main class="hero">
+        <h1>The Definitive <br><span style="color: var(--primary)">COVID-19 Archive</span></h1>
+        <p>
+            Secure access to the complete 2019-2020 global pandemic datasets. 
+            Engineered for medical professionals and researchers.
+        </p>
+        <a href="signup.html" class="btn-primary">
+            Get Started Now <i class='bx bx-right-arrow-alt'></i>
+        </a>
+    </main>
+
+    <!-- Live Data Ticker -->
+    <div class="ticker-wrap">
+        <div class="ticker">
+            <div class="ticker-item">GLOBAL CASES: <span>118,000,000+</span></div>
+            <div class="ticker-item">DATA POINTS: <span>2.4 BILLION</span></div>
+            <div class="ticker-item">COUNTRIES: <span>192</span></div>
+            <div class="ticker-item">STATUS: <span>VERIFIED</span></div>
+            <div class="ticker-item">LAST UPDATE: <span>ARCHIVE LOCKED</span></div>
+            <!-- Duplicate for infinite scroll illusion -->
+            <div class="ticker-item">GLOBAL CASES: <span>118,000,000+</span></div>
+            <div class="ticker-item">DATA POINTS: <span>2.4 BILLION</span></div>
+            <div class="ticker-item">COUNTRIES: <span>192</span></div>
+            <div class="ticker-item">STATUS: <span>VERIFIED</span></div>
+        </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <section class="features">
+        <div class="feature-card">
+            <div class="icon-box"><i class='bx bx-check-shield'></i></div>
+            <h3>Verified Accuracy</h3>
+            <p>Data is cross-referenced with WHO and CDC historical archives to ensure 99.9% statistical accuracy.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon-box"><i class='bx bx-globe'></i></div>
+            <h3>Global Coverage</h3>
+            <p>Access granular data from over 190 countries, broken down by mild, serious, and fatal classifications.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon-box"><i class='bx bx-server'></i></div>
+            <h3>Secure Storage</h3>
+            <p>Enterprise-grade encryption ensures that sensitive historical data remains tampered-proof and accessible.</p>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2025 Epoch19 Data Archive. All rights reserved.
+    </footer>
+
+    <!-- JS for Particles & Auth -->
+    <script type="module">
+        // --- 1. PARTICLE GENERATOR ---
+        const particleContainer = document.getElementById('particles');
+        for(let i=0; i<30; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            p.style.animationDelay = Math.random() * 5 + 's';
+            particleContainer.appendChild(p);
+        }
+
+        // --- 2. FIREBASE AUTH REDIRECT ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlWM9hfnreQMAXze5q5o2jr_Z9ekYxE2M",
+            authDomain: "epoch19-479ca.firebaseapp.com",
+            projectId: "epoch19-479ca",
+            storageBucket: "epoch19-479ca.firebasestorage.app",
+            messagingSenderId: "608813445980",
+            appId: "1:608813445980:web:08ab4dedc8ddc71e670799",
+            measurementId: "G-JKR6K20LSL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = "dashboard.html";
+            }
+        });
+    </script>
+</body>
+</html>

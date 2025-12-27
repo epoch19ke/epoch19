@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Revenue Control | Epoch19 Admin</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- 1. ADMIN THEME --- */
+        :root {
+            --bg-deep: #020617;
+            --admin-primary: #7C3AED;
+            --admin-accent: #8B5CF6;
+            --gold: #F59E0B;
+            --success: #10B981;
+            --danger: #EF4444;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --glass-surface: rgba(15, 23, 42, 0.95);
+            --glass-border: rgba(139, 92, 246, 0.3);
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- 2. BACKGROUND --- */
+        .bg-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -5;
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+        }
+        @media (min-width: 768px) {
+            .bg-wrapper {
+                background: linear-gradient(to bottom, rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.95)), url('assets/images/background.png');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }
+        }
+
+        /* --- 3. HEADER & NAV --- */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            padding: 1rem 5%;
+            background: rgba(2, 6, 23, 0.98);
+            border-bottom: 1px solid var(--admin-primary);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand {
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 700; font-size: 1.2rem; color: #fff; text-decoration: none;
+            white-space: nowrap; 
+        }
+        .admin-badge {
+            background: var(--admin-primary); color: white;
+            padding: 4px 10px; border-radius: 4px; font-size: 0.7rem;
+            font-weight: 700; text-transform: uppercase;
+        }
+        .menu-toggle { font-size: 1.8rem; cursor: pointer; color: var(--text-muted); }
+
+        .nav-drawer {
+            position: fixed; top: 0; right: -300px;
+            width: 280px; height: 100vh;
+            background: #0f172a;
+            border-left: 1px solid var(--admin-primary);
+            z-index: 1001; padding: 6rem 2rem;
+            transition: right 0.3s ease;
+            display: flex; flex-direction: column; gap: 1rem;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+        .nav-drawer.active { right: 0; }
+        .nav-item {
+            text-decoration: none; color: var(--text-muted);
+            font-size: 1rem; display: flex; align-items: center; gap: 15px;
+            padding: 12px; border-radius: 6px; transition: 0.3s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(124, 58, 237, 0.1); color: #fff; border: 1px solid var(--admin-primary);
+        }
+        .nav-close { position: absolute; top: 20px; right: 20px; font-size: 2rem; cursor: pointer; }
+
+        /* --- 4. MAIN LAYOUT --- */
+        main {
+            margin-top: 80px; padding: 2rem 5%;
+            flex: 1; max-width: 1400px; width: 100%; align-self: center;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;
+        }
+        .page-header h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 10px; color: #fff; margin: 0; }
+        
+        .status-pill {
+            background: rgba(245, 158, 11, 0.1); color: var(--gold);
+            padding: 5px 15px; border-radius: 20px; font-size: 0.85rem;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            display: flex; align-items: center; gap: 8px; font-weight: 600;
+        }
+        .status-dot { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; animation: pulse 1.5s infinite; }
+
+        .request-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .req-card {
+            background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 1.5rem;
+            position: relative; overflow: hidden;
+            transition: 0.3s;
+            display: flex; flex-direction: column; gap: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        .req-card:hover { transform: translateY(-5px); border-color: var(--admin-primary); }
+
+        /* Status Borders */
+        .req-card.status-approved { border-left: 4px solid var(--success); }
+        .req-card.status-rejected { border-left: 4px solid var(--danger); opacity: 0.7; }
+        .req-card.status-pending { border-left: 4px solid var(--gold); }
+
+        .req-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .req-user h3 { font-size: 1.1rem; margin-bottom: 3px; color: #fff; }
+        .req-user p { font-size: 0.85rem; color: var(--text-muted); }
+        .req-time { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-code); text-align: right; }
+
+        .req-details {
+            background: rgba(0,0,0,0.4);
+            padding: 1rem; border-radius: 8px;
+            font-family: var(--font-code); font-size: 0.85rem;
+        }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .detail-label { color: var(--text-muted); }
+        .detail-val { color: #fff; }
+        .val-txn { color: var(--gold); letter-spacing: 0.5px; }
+
+        .req-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: auto;
+        }
+        .btn-action {
+            padding: 10px; border: none; border-radius: 6px;
+            font-weight: 600; cursor: pointer; transition: 0.2s;
+            display: flex; justify-content: center; align-items: center; gap: 5px;
+        }
+        .btn-approve { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); }
+        .btn-approve:hover { background: var(--success); color: #000; }
+        .btn-reject { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-reject:hover { background: var(--danger); color: #fff; }
+
+        /* Badges for History */
+        .status-badge {
+            text-align: center; padding: 8px; border-radius: 6px;
+            font-weight: 700; font-size: 0.8rem; letter-spacing: 1px;
+            margin-top: auto;
+        }
+        .badge-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .badge-rejected { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+        @keyframes slideOut { to { opacity: 0; transform: translateX(50px); } }
+        .slide-out { animation: slideOut 0.5s forwards; pointer-events: none; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        .empty-state {
+            grid-column: 1 / -1; text-align: center; padding: 4rem 1rem;
+            color: var(--text-muted);
+        }
+        .empty-icon { font-size: 3rem; opacity: 0.2; margin-bottom: 1rem; display: block; }
+        
+        footer {
+            margin-top: auto; border-top: 1px solid var(--glass-border);
+            padding: 1.5rem 5%; background: rgba(2, 6, 23, 0.95);
+            font-size: 0.8rem; color: var(--text-muted);
+        }
+
+        @media(max-width: 768px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .request-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-wrapper"></div>
+
+    <!-- Header -->
+    <header>
+        <a href="admin-dashboard.html" class="brand">
+            <img src="assets/images/logo.png" alt="Epoch19" style="height: 30px;">
+            <span>EPOCH19 <span class="admin-badge">ADMIN</span></span>
+        </a>
+        <i class='bx bx-menu menu-toggle' onclick="toggleNav()"></i>
+    </header>
+
+    <!-- Nav -->
+    <aside class="nav-drawer" id="navDrawer">
+        <i class='bx bx-x nav-close' onclick="toggleNav()"></i>
+        <div style="padding: 0 12px; margin-bottom: 1rem;">
+            <p style="font-size: 0.8rem; color: var(--admin-primary); font-weight: 700;">COMMAND CENTER</p>
+        </div>
+        <a href="admin-dashboard.html" class="nav-item"><i class='bx bxs-dashboard'></i> Overview</a>
+        <a href="admin-data.html" class="nav-item"><i class='bx bx-table'></i> Data Manager</a>
+        <a href="admin-payments.html" class="nav-item active"><i class='bx bx-credit-card'></i> Payments</a>
+        <a href="admin-resources.html" class="nav-item"><i class='bx bx-news'></i> Post Resources</a>
+        <a href="admin-settings.html" class="nav-item"><i class='bx bx-slider-alt'></i> Global Config</a>
+        <div style="margin-top: auto;">
+            <a href="dashboard.html" class="nav-item"><i class='bx bx-arrow-back'></i> User View</a>
+            <a href="#" class="nav-item" id="btn-logout" style="color: #EF4444;"><i class='bx bx-power-off'></i> Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        <div class="page-header">
+            <h1><i class='bx bx-list-ul'></i> Transaction History</h1>
+            <div class="status-pill">
+                <span class="status-dot"></span> <span id="pending-count">0</span> Actions Required
+            </div>
+        </div>
+
+        <div class="request-grid" id="request-container">
+            <div class="empty-state">
+                <i class='bx bx-loader-alt bx-spin empty-icon'></i>
+                <p>Loading ledger...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        Epoch19 Admin System &copy; 2025
+    </footer>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, getDoc, writeBatch, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlWM9hfnreQMAXze5q5o2jr_Z9ekYxE2M",
+            authDomain: "epoch19-479ca.firebaseapp.com",
+            projectId: "epoch19-479ca",
+            storageBucket: "epoch19-479ca.firebasestorage.app",
+            messagingSenderId: "608813445980",
+            appId: "1:608813445980:web:08ab4dedc8ddc71e670799",
+            measurementId: "G-JKR6K20LSL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // 1. Auth Guard
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = "login.html"; return; }
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists() || userSnap.data().role !== 'admin') {
+                    window.location.href = "dashboard.html";
+                } else {
+                    currentUser = user;
+                    loadAllHistory();
+                }
+            } catch (e) { console.error("Auth Error", e); }
+        });
+
+        // 2. Load ALL Transactions (History + Pending)
+        function loadAllHistory() {
+            const container = document.getElementById('request-container');
+            
+            // Query: Get EVERYTHING, sorted by newest first
+            const q = query(
+                collection(db, "payment_requests"), 
+                orderBy("createdAt", "desc")
+            );
+
+            onSnapshot(q, (snapshot) => {
+                // Calculate Pending Count manually since query gets everything
+                let pendingCount = 0;
+                let html = "";
+
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class='bx bx-ghost empty-icon'></i>
+                            <p>No transaction history found.</p>
+                        </div>
+                    `;
+                    document.getElementById('pending-count').innerText = 0;
+                    return;
+                }
+                
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const reqId = docSnap.id;
+                    const createdTime = data.createdAt ? new Date(data.createdAt.seconds*1000).toLocaleString() : 'Just now';
+                    
+                    if(data.status === 'pending') pendingCount++;
+
+                    // Determine Status Logic
+                    let statusClass = `status-${data.status}`; // status-pending, status-approved, status-rejected
+                    let actionArea = "";
+                    
+                    if(data.status === 'pending') {
+                        // Show Actions
+                        actionArea = `
+                            <div class="req-actions">
+                                <button class="btn-action btn-reject" onclick="rejectPayment('${reqId}')">
+                                    <i class='bx bx-x'></i> Reject
+                                </button>
+                                <button class="btn-action btn-approve" onclick="approvePayment('${reqId}', '${data.userId}')">
+                                    <i class='bx bx-check'></i> Approve
+                                </button>
+                            </div>
+                        `;
+                    } else if (data.status === 'approved') {
+                        // Show Approved Badge
+                        actionArea = `
+                            <div class="status-badge badge-approved">
+                                <i class='bx bx-check-circle'></i> APPROVED
+                            </div>
+                        `;
+                    } else if (data.status === 'rejected') {
+                        // Show Rejected Badge
+                        actionArea = `
+                            <div class="status-badge badge-rejected">
+                                <i class='bx bx-x-circle'></i> REJECTED
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                        <div class="req-card ${statusClass}" id="card-${reqId}">
+                            <div class="req-header">
+                                <div class="req-user">
+                                    <h3>${data.userName || 'Unknown'}</h3>
+                                    <p>${data.userEmail || 'No Email'}</p>
+                                </div>
+                                <div class="req-time">
+                                    ${createdTime}
+                                </div>
+                            </div>
+
+                            <div class="req-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Payer Name:</span>
+                                    <span class="detail-val val-txn">${data.payerName || 'N/A'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">PayPal Email:</span>
+                                    <span class="detail-val">${data.payerEmail || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            ${actionArea}
+                        </div>
+                    `;
+                });
+
+                // Update DOM
+                container.innerHTML = html;
+                document.getElementById('pending-count').innerText = pendingCount;
+
+            }, (error) => {
+                console.error("Listener Error:", error);
+                container.innerHTML = `<div class="empty-state"><p style="color:#EF4444">Error loading history.</p></div>`;
+            });
+        }
+
+        // 3. APPROVE LOGIC
+        window.approvePayment = async (reqId, userId) => {
+            const btn = document.querySelector(`#card-${reqId} .btn-approve`);
+            if(btn) { btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i>`; btn.disabled = true; }
+            
+            try {
+                if (!userId) throw new Error("Missing User ID.");
+
+                const batch = writeBatch(db);
+                const reqRef = doc(db, "payment_requests", reqId);
+                const userRef = doc(db, "users", userId);
+                
+                batch.update(reqRef, { 
+                    status: 'approved',
+                    resolvedAt: serverTimestamp(),
+                    adminId: currentUser.uid
+                });
+                batch.update(userRef, { status: 'premium' });
+
+                await batch.commit();
+                
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success', 
+                    title: 'Access Granted', background: '#020617', color:'#fff', timer: 1500, showConfirmButton: false
+                });
+                // Snapshot will auto-refresh the UI to show "Approved" badge
+
+            } catch (error) {
+                console.error("Approve Error:", error);
+                if(btn) { btn.innerHTML = `<i class='bx bx-check'></i> Approve`; btn.disabled = false; }
+                Swal.fire({ icon: 'error', title: 'Failed', text: error.message, background: '#020617', color: '#fff' });
+            }
+        };
+
+        // 4. REJECT LOGIC
+        window.rejectPayment = (reqId) => {
+            Swal.fire({
+                title: 'Reject Request?',
+                text: "The record will be marked as REJECTED in history.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#1e293b',
+                background: '#020617', color: '#fff'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const reqRef = doc(db, "payment_requests", reqId);
+                        await updateDoc(reqRef, {
+                            status: 'rejected',
+                            resolvedAt: serverTimestamp(),
+                            adminId: currentUser.uid
+                        });
+                        
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'info', 
+                            title: 'Rejected', background: '#020617', color:'#fff', timer: 1500, showConfirmButton: false
+                        });
+                    } catch (e) {
+                        Swal.fire('Error', e.message, 'error');
+                    }
+                }
+            });
+        };
+
+        window.toggleNav = () => document.getElementById('navDrawer').classList.toggle('active');
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>    
+</body>
+</html>

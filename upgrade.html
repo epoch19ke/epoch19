@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- ZERO ZOOM FIX -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Upgrade Clearance | Epoch19</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- 1. THEME VARIABLES --- */
+        :root {
+            --bg-deep: #020617;
+            --admin-primary: #7C3AED; /* Purple */
+            --admin-accent: #8B5CF6;
+            --alert: #EF4444;
+            --success: #10B981;
+            --gold: #F59E0B;
+            --gold-dim: rgba(245, 158, 11, 0.1);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --glass-surface: rgba(15, 23, 42, 0.95);
+            --glass-border: rgba(139, 92, 246, 0.3);
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- 2. BACKGROUND --- */
+        .bg-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -5;
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+        }
+        @media (min-width: 768px) {
+            .bg-wrapper {
+                background: 
+                    linear-gradient(to bottom, rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.95)), 
+                    url('assets/images/background.png');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }
+        }
+
+        /* --- 3. LOADER --- */
+        #global-loader {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg-deep);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .spinner-ring {
+            width: 60px; height: 60px;
+            border: 4px solid rgba(245, 158, 11, 0.2);
+            border-top: 4px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loader-text {
+            margin-top: 15px; font-family: var(--font-code);
+            font-size: 0.9rem; color: var(--gold); letter-spacing: 2px;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* --- 4. HEADER & NAV --- */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            padding: 1rem 5%;
+            background: rgba(2, 6, 23, 0.98);
+            border-bottom: 1px solid var(--admin-primary);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand {
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 700; font-size: 1.2rem; color: #fff; text-decoration: none;
+        }
+        .user-badge {
+            background: rgba(255, 255, 255, 0.1); color: var(--text-muted);
+            padding: 4px 10px; border-radius: 4px; font-size: 0.7rem;
+            font-weight: 700; text-transform: uppercase; border: 1px solid var(--glass-border);
+        }
+        .menu-toggle { font-size: 1.8rem; cursor: pointer; color: var(--text-muted); }
+
+        /* Nav Drawer */
+        .nav-drawer {
+            position: fixed; top: 0; right: -300px;
+            width: 280px; height: 100vh;
+            background: #0f172a;
+            border-left: 1px solid var(--admin-primary);
+            z-index: 1001; padding: 6rem 2rem;
+            transition: right 0.3s ease;
+            display: flex; flex-direction: column; gap: 1rem;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+        .nav-drawer.active { right: 0; }
+        .nav-item {
+            text-decoration: none; color: var(--text-muted);
+            font-size: 1rem; display: flex; align-items: center; gap: 15px;
+            padding: 12px; border-radius: 6px; transition: 0.3s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(124, 58, 237, 0.1); color: #fff; border: 1px solid var(--admin-primary);
+        }
+        .nav-close { position: absolute; top: 20px; right: 20px; font-size: 2rem; cursor: pointer; }
+
+        /* --- 5. MAIN CONTENT --- */
+        main {
+            margin-top: 80px; padding: 4rem 5%;
+            flex: 1; max-width: 1400px; width: 100%; align-self: center;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 3rem;
+        }
+
+        /* Left Side: Visuals */
+        .upgrade-visuals {
+            flex: 1; min-width: 320px; max-width: 450px;
+        }
+
+        /* Gold Access Card */
+        .access-card {
+            width: 100%; height: 260px;
+            background: linear-gradient(135deg, #1e1b4b 0%, #020617 100%);
+            border: 1px solid var(--gold);
+            border-radius: 16px;
+            padding: 2rem; position: relative; overflow: hidden;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+            margin-bottom: 2rem;
+            transform-style: preserve-3d;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .access-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(245, 158, 11, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 5s infinite linear;
+            pointer-events: none;
+        }
+
+        .chip {
+            width: 50px; height: 35px;
+            background: linear-gradient(135deg, #fbbf24, #b45309);
+            border-radius: 6px; margin-bottom: 2.5rem;
+            position: relative; overflow: hidden;
+        }
+        .chip::after {
+            content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(0,0,0,0.3);
+        }
+
+        .card-number {
+            font-family: var(--font-code); font-size: 1.2rem; letter-spacing: 3px;
+            color: var(--gold); text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-details { display: flex; justify-content: space-between; align-items: flex-end; }
+        .detail-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+        .detail-val { font-family: var(--font-code); font-size: 1rem; color: #fff; text-transform: uppercase; }
+        .detail-val.status { color: var(--gold); font-weight: 700; }
+
+        /* Benefits */
+        .benefits-list { list-style: none; margin-top: 1rem; }
+        .benefits-list li {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 1rem; font-size: 0.95rem; color: var(--text-muted);
+            padding: 10px; border-radius: 8px; transition: 0.3s;
+        }
+        .benefits-list li:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .benefits-list li i { color: var(--gold); font-size: 1.2rem; }
+
+        /* Right Side: Action Panel */
+        .action-panel {
+            flex: 1; min-width: 320px; max-width: 500px;
+            background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            display: flex; flex-direction: column;
+        }
+
+        .panel-header { text-align: center; margin-bottom: 2rem; }
+        .panel-header h2 { font-size: 1.5rem; margin-bottom: 5px; color: #fff; }
+        .price-display { font-family: var(--font-code); font-size: 2.5rem; font-weight: 700; color: var(--gold); }
+        .price-sub { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* Wallet Box */
+        .wallet-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px dashed var(--admin-accent);
+            padding: 1.2rem; border-radius: 12px;
+            margin-bottom: 2rem; text-align: center;
+        }
+        .wallet-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .wallet-address {
+            font-family: var(--font-code); font-size: 0.95rem; color: #fff;
+            background: rgba(124, 58, 237, 0.1); padding: 10px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            word-break: break-all;
+        }
+        .btn-copy { cursor: pointer; color: var(--admin-accent); transition: 0.2s; font-size: 1.2rem; }
+        .btn-copy:hover { color: #fff; transform: scale(1.1); }
+
+        /* Form */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-code); }
+        .form-input {
+            width: 100%; padding: 12px 16px;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+            border-radius: 8px; color: #fff; font-family: var(--font-code);
+            outline: none; transition: 0.3s;
+        }
+        .form-input:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
+
+        .btn-submit {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--gold) 0%, #b45309 100%);
+            color: #000; border: none; border-radius: 8px;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* States */
+        .state-container { text-align: center; padding: 2rem; display: none; }
+        .state-icon { font-size: 4rem; color: var(--gold); margin-bottom: 1rem; animation: bounce 2s infinite; }
+        .pending-loader { font-size: 3rem; color: var(--admin-accent); margin-bottom: 1rem; }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes shine { from { left: -100%; } to { left: 200%; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- 6. FOOTER --- */
+        footer {
+            margin-top: auto; border-top: 1px solid var(--glass-border);
+            padding: 2.5rem 5% 1.5rem; background: rgba(2, 6, 23, 0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            gap: 1.5rem; text-align: center;
+        }
+
+        .footer-socials { display: flex; gap: 25px; }
+        .footer-socials a {
+            color: var(--text-muted); font-size: 1.6rem;
+            transition: all 0.3s ease; width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border); text-decoration: none;
+        }
+        .footer-socials a:hover {
+            color: #fff; background: var(--admin-primary);
+            border-color: var(--admin-primary); transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
+        }
+        .copyright-text { font-family: var(--font-code); opacity: 0.6; font-size: 0.8rem; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-wrapper"></div>
+
+    <!-- Preloader -->
+    <div id="global-loader">
+        <div class="spinner-ring"></div>
+        <div class="loader-text">VERIFYING CLEARANCE...</div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <a href="dashboard.html" class="brand">
+            <img src="assets/images/logo.png" alt="Epoch19" style="height: 30px;">
+            <span>EPOCH19 <span class="user-badge">BILLING</span></span>
+        </a>
+        <i class='bx bx-menu menu-toggle' onclick="toggleNav()"></i>
+    </header>
+
+    <!-- Nav Drawer -->
+    <aside class="nav-drawer" id="navDrawer">
+        <i class='bx bx-x nav-close' onclick="toggleNav()"></i>
+        <div style="padding: 0 12px; margin-bottom: 1rem;">
+            <p style="font-size: 0.8rem; color: var(--admin-primary); font-weight: 700;">NAVIGATION</p>
+        </div>
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-grid-alt'></i> Dashboard</a>
+        <a href="database.html" class="nav-item"><i class='bx bx-data'></i> Data Archive</a>
+        <a href="resources.html" class="nav-item"><i class='bx bx-news'></i> Resources</a>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> Settings</a>
+        <a href="upgrade.html" class="nav-item active" style="color: var(--gold); border: 1px solid rgba(245,158,11,0.3); background: rgba(245,158,11,0.1);"><i class='bx bx-crown'></i> Upgrade</a>
+        
+        <div style="margin-top: auto;">
+            <a href="#" class="nav-item" id="btn-logout" style="color: var(--alert);"><i class='bx bx-power-off'></i> Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        
+        <!-- Left: Visuals -->
+        <div class="upgrade-visuals">
+            <div class="access-card">
+                <div class="chip"></div>
+                <div class="card-number">•••• •••• •••• 2025</div>
+                <div class="card-details">
+                    <div>
+                        <div class="detail-label">OPERATOR</div>
+                        <div class="detail-val" id="card-name">LOADING...</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">LEVEL</div>
+                        <div class="detail-val status" id="card-status">STANDARD</div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="benefits-list">
+                <li><i class='bx bxs-lock-open'></i> Unrestricted Global Archive Access</li>
+                <li><i class='bx bxs-file-pdf'></i> PDF & CSV Data Exports</li>
+                <li><i class='bx bxs-analyse'></i> Real-time Predictive Models</li>
+                <li><i class='bx bxs-shield-star'></i> Priority API Bandwidth</li>
+            </ul>
+        </div>
+
+        <!-- Right: Action Panel -->
+        <div class="action-panel">
+            
+            <!-- 1. Default: Payment Form -->
+            <div id="view-payment">
+                <div class="panel-header">
+                    <h2>Upgrade Clearance</h2>
+                    <div class="price-display">$5.00</div>
+                    <div class="price-sub">LIFETIME ACCESS</div>
+                </div>
+
+                <div class="wallet-box">
+                    <div class="wallet-label">SEND PAYMENT VIA PAYPAL TO:</div>
+                    <div class="wallet-address">
+                        <span id="admin-wallet">loading...</span>
+                        <i class='bx bx-copy btn-copy' onclick="copyAddress()" title="Copy Address"></i>
+                    </div>
+                </div>
+
+                <form id="payment-form">
+                    <div class="form-group">
+                        <label class="form-label">PAYER NAME (ON PAYPAL)</label>
+                        <input type="text" class="form-input" id="payer-name" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">PAYPAL EMAIL ADDRESS</label>
+                        <input type="email" class="form-input" id="payer-email" placeholder="email@example.com" required>
+                    </div>
+                    <button type="submit" class="btn-submit" id="submit-btn">
+                        <i class='bx bx-check-shield'></i> SUBMIT VERIFICATION
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2. State: Pending -->
+            <div id="view-pending" class="state-container">
+                <i class='bx bx-loader-alt bx-spin pending-loader'></i>
+                <h2 style="color: #fff; margin-bottom: 10px;">VERIFICATION IN PROGRESS</h2>
+                <p style="color: var(--text-muted); line-height: 1.6;">
+                    Payment from <span style="color: var(--admin-accent); font-family: var(--font-code);" id="pending-name">...</span> is currently under review by our administrators.
+                </p>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.85rem; color: var(--gold);">
+                    <i class='bx bx-time'></i> Estimated time: 1-6 Hours
+                </div>
+            </div>
+
+            <!-- 3. State: Premium -->
+            <div id="view-premium" class="state-container">
+                <i class='bx bxs-badge-check state-icon'></i>
+                <h2 style="color: #fff; margin-bottom: 10px;">CLEARANCE GRANTED</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">
+                    Your account has full access to the Epoch19 Data Archive.
+                </p>
+                <button onclick="window.location.href='database.html'" class="btn-submit" style="background: var(--admin-primary); color: #fff;">
+                    ACCESS ARCHIVE
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-socials">
+            <a id="link-email" href="#" title="Email Support"><i class='bx bx-envelope'></i></a>
+            <a id="link-whatsapp" href="#" title="WhatsApp Support"><i class='bx bxl-whatsapp'></i></a>
+        </div>
+        <div class="copyright-text">
+            Epoch19 Data Archive &copy; 2025
+        </div>
+    </footer>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlWM9hfnreQMAXze5q5o2jr_Z9ekYxE2M",
+            authDomain: "epoch19-479ca.firebaseapp.com",
+            projectId: "epoch19-479ca",
+            storageBucket: "epoch19-479ca.firebasestorage.app",
+            messagingSenderId: "608813445980",
+            appId: "1:608813445980:web:08ab4dedc8ddc71e670799",
+            measurementId: "G-JKR6K20LSL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // 1. Auth Guard
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                currentUser = user;
+                await checkUserStatus(user.uid);
+                await loadConfig();
+                
+                // Hide Loader
+                const loader = document.getElementById('global-loader');
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; }, 500);
+            }
+        });
+
+        // 2. Check Status (Premium? Pending? Free?)
+        async function checkUserStatus(uid) {
+            try {
+                // A. Check Profile (Already Premium?)
+                const userRef = doc(db, "users", uid);
+                const userSnap = await getDoc(userRef);
+                
+                let isPremium = false;
+                if(userSnap.exists()) {
+                    const data = userSnap.data();
+                    document.getElementById('card-name').innerText = (data.fullName || "User").toUpperCase();
+                    
+                    if(data.status === 'premium' || data.role === 'admin') {
+                        isPremium = true;
+                        showView('view-premium');
+                        document.getElementById('card-status').innerText = "GOLD CLASS";
+                        document.getElementById('card-status').style.color = "var(--gold)";
+                    }
+                }
+
+                if(isPremium) return;
+
+                // B. Check Pending Requests
+                const q = query(
+                    collection(db, "payment_requests"), 
+                    where("userId", "==", uid),
+                    where("status", "==", "pending")
+                );
+                const pendingSnap = await getDocs(q);
+
+                if(!pendingSnap.empty) {
+                    showView('view-pending');
+                    const pendingData = pendingSnap.docs[0].data();
+                    document.getElementById('pending-name').innerText = pendingData.payerName || "You";
+                    document.getElementById('card-status').innerText = "VERIFYING...";
+                } else {
+                    showView('view-payment'); // Default
+                }
+
+            } catch (error) {
+                console.error("Status Check Error", error);
+            }
+        }
+
+        // 3. Load Admin Config
+        async function loadConfig() {
+            try {
+                const configSnap = await getDoc(doc(db, "config", "main_settings"));
+                if (configSnap.exists()) {
+                    const data = configSnap.data();
+                    
+                    // Wallet
+                    document.getElementById('admin-wallet').innerText = data.admin_paypal || "langatbismark1968@gmail.com";
+                    
+                    // Footer
+                    if(data.contact_email) document.getElementById('link-email').href = `mailto:${data.contact_email}`;
+                    if(data.contact_whatsapp) document.getElementById('link-whatsapp').href = `https://wa.me/${data.contact_whatsapp}`;
+                } else {
+                    document.getElementById('admin-wallet').innerText = "langatbismark1968@gmail.com";
+                }
+            } catch (e) {}
+        }
+
+        // 4. View Switcher Helper
+        function showView(viewId) {
+            document.getElementById('view-payment').style.display = 'none';
+            document.getElementById('view-pending').style.display = 'none';
+            document.getElementById('view-premium').style.display = 'none';
+            document.getElementById(viewId).style.display = 'block';
+        }
+
+        // 5. Copy Logic
+        window.copyAddress = () => {
+            const text = document.getElementById('admin-wallet').innerText;
+            navigator.clipboard.writeText(text);
+            
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success', 
+                title: 'ADDRESS COPIED', showConfirmButton: false, timer: 1500,
+                background: '#020617', color: '#fff'
+            });
+        };
+
+        // 6. Form Submit
+        document.getElementById('payment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            
+            // Get Input Values
+            const payerName = document.getElementById('payer-name').value.trim();
+            const payerEmail = document.getElementById('payer-email').value.trim();
+
+            if(!payerName || !payerEmail) return;
+
+            btn.disabled = true;
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> ENCRYPTING DATA...";
+
+            try {
+                // Add Request to Firestore
+                await addDoc(collection(db, "payment_requests"), {
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email, // Account email
+                    userName: document.getElementById('card-name').innerText, // Account Name
+                    payerName: payerName, // Input: Name on PayPal
+                    payerEmail: payerEmail, // Input: Email on PayPal
+                    status: 'pending',
+                    createdAt: serverTimestamp()
+                });
+
+                Swal.fire({
+                    icon: 'success', title: 'PROOF SUBMITTED',
+                    text: 'Your request is now in the verification queue.',
+                    background: '#020617', color: '#fff', confirmButtonColor: '#F59E0B'
+                }).then(() => {
+                    location.reload(); // Refresh to trigger Pending View
+                });
+
+            } catch (error) {
+                console.error("Submission Error", error);
+                btn.disabled = false;
+                btn.innerHTML = "<i class='bx bx-check-shield'></i> SUBMIT VERIFICATION";
+                Swal.fire({ title: 'ERROR', text: 'Connection refused. Try again.', icon: 'error', background:'#020617', color:'#fff' });
+            }
+        });
+
+        window.toggleNav = () => document.getElementById('navDrawer').classList.toggle('active');
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>
+</body>
+</html>

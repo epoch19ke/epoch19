@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- ZERO ZOOM FIX: Forces 1:1 scale and prevents accidental zooming -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Config | Epoch19 Admin</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- 1. ADMIN THEME --- */
+        :root {
+            --bg-deep: #020617;
+            --admin-primary: #7C3AED;
+            --admin-accent: #8B5CF6;
+            --alert: #EF4444;
+            --gold: #F59E0B; /* Specific for Premium Badges */
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --glass-surface: rgba(15, 23, 42, 0.95);
+            --glass-border: rgba(139, 92, 246, 0.3);
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- 2. BACKGROUND (Mobile Optimized) --- */
+        .bg-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -5;
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+        }
+
+        /* Desktop Image Override */
+        @media (min-width: 768px) {
+            .bg-wrapper {
+                background: 
+                    linear-gradient(to bottom, rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.95)), 
+                    url('assets/images/background.png');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }
+        }
+
+        /* --- 3. HEADER & NAV --- */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            padding: 1rem 5%;
+            background: rgba(2, 6, 23, 0.98);
+            border-bottom: 1px solid var(--admin-primary);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand {
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 700; font-size: 1.2rem; color: #fff; text-decoration: none;
+            white-space: nowrap; 
+        }
+        .admin-badge {
+            background: var(--admin-primary); color: white;
+            padding: 4px 10px; border-radius: 4px; font-size: 0.7rem;
+            font-weight: 700; text-transform: uppercase;
+        }
+        .menu-toggle { font-size: 1.8rem; cursor: pointer; color: var(--text-muted); }
+
+        /* Navigation Drawer */
+        .nav-drawer {
+            position: fixed; top: 0; right: -300px;
+            width: 280px; height: 100vh;
+            background: #0f172a;
+            border-left: 1px solid var(--admin-primary);
+            z-index: 1001; padding: 6rem 2rem;
+            transition: right 0.3s ease;
+            display: flex; flex-direction: column; gap: 1rem;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+        .nav-drawer.active { right: 0; }
+        .nav-item {
+            text-decoration: none; color: var(--text-muted);
+            font-size: 1rem; display: flex; align-items: center; gap: 15px;
+            padding: 12px; border-radius: 6px; transition: 0.3s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(124, 58, 237, 0.1); color: #fff; border: 1px solid var(--admin-primary);
+        }
+        .nav-close { position: absolute; top: 20px; right: 20px; font-size: 2rem; cursor: pointer; }
+
+        /* --- 4. MAIN LAYOUT & SCROLLING --- */
+        main {
+            margin-top: 80px; padding: 1.5rem 5%;
+            flex: 1; max-width: 1600px; width: 100%; align-self: center;
+            display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;
+            overflow-x: auto; 
+        }
+
+        /* LEFT: CONFIG PANEL */
+        .config-panel {
+            background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 1.5rem;
+            height: fit-content;
+            backdrop-filter: blur(10px);
+            min-width: 300px;
+        }
+        .panel-header {
+            margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;
+        }
+        .panel-header h2 { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: var(--admin-accent); margin: 0; }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.85rem; }
+        
+        .input-group { position: relative; }
+        .input-group i {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        .form-input {
+            width: 100%; padding: 10px 10px 10px 35px;
+            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
+            border-radius: 8px; color: #fff; outline: none; transition: 0.3s;
+            font-family: var(--font-ui); font-size: 0.9rem;
+        }
+        .form-input:focus { border-color: var(--admin-primary); }
+
+        .btn-save {
+            width: 100%; padding: 12px; margin-top: 15px;
+            background: var(--admin-primary); color: white; border: none; border-radius: 6px;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-save:hover { background: var(--admin-accent); }
+
+        /* RIGHT: USER MANAGER PANEL */
+        .users-panel {
+            background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 1.5rem;
+            display: flex; flex-direction: column;
+            max-height: 80vh;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem;
+        }
+        .search-bar { width: 100%; max-width: 250px; }
+        .search-bar input { padding-left: 35px; }
+
+        .table-scroll { 
+            overflow-y: auto; 
+            overflow-x: auto; 
+            flex: 1; width: 100%;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            text-align: left; 
+            min-width: 600px; /* Forces scroll on mobile */
+        }
+        thead th {
+            position: sticky; top: 0; background: #0f172a;
+            padding: 1rem; font-size: 0.75rem; color: var(--text-muted);
+            border-bottom: 1px solid var(--glass-border); text-transform: uppercase;
+        }
+        tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        td { padding: 0.8rem 1rem; font-size: 0.85rem; color: var(--text-main); }
+
+        /* User Cell Styles */
+        .user-cell { display: flex; align-items: center; gap: 12px; }
+        .user-avatar {
+            width: 32px; height: 32px; background: var(--admin-primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
+        }
+        .user-info div:first-child { font-weight: 600; font-size: 0.9rem; }
+        .user-info div:last-child { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+        .badge-premium { background: rgba(245, 158, 11, 0.1); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-free { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); }
+        .badge-admin { background: rgba(124, 58, 237, 0.1); color: var(--admin-accent); }
+
+        /* Actions */
+        .action-cell { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-mini {
+            width: 30px; height: 30px; border-radius: 4px; border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.05); color: var(--text-muted);
+            cursor: pointer; transition: 0.2s; font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-mini:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn-del:hover { background: rgba(239, 68, 68, 0.2); color: var(--alert); border-color: var(--alert); }
+        .btn-upg:hover { background: rgba(245, 158, 11, 0.2); color: var(--gold); border-color: var(--gold); }
+
+        footer {
+            margin-top: auto; border-top: 1px solid var(--glass-border);
+            padding: 1.5rem 5%; background: rgba(2, 6, 23, 0.95);
+            font-size: 0.8rem; color: var(--text-muted);
+        }
+
+        /* MOBILE RESPONSIVENESS */
+        @media(max-width: 1024px) {
+            main { 
+                grid-template-columns: 1fr; 
+                padding-top: 1rem;
+                display: block; 
+            }
+            .config-panel { margin-bottom: 2rem; width: 100%; }
+            .brand span { font-size: 1rem; }
+            .toolbar { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .search-bar { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-wrapper"></div>
+
+    <!-- Header -->
+    <header>
+        <a href="admin-dashboard.html" class="brand">
+            <img src="assets/images/logo.png" alt="Epoch19" style="height: 30px;">
+            <span>EPOCH19 <span class="admin-badge">ADMIN</span></span>
+        </a>
+        <i class='bx bx-menu menu-toggle' onclick="toggleNav()"></i>
+    </header>
+
+    <!-- Nav -->
+    <aside class="nav-drawer" id="navDrawer">
+        <i class='bx bx-x nav-close' onclick="toggleNav()"></i>
+        <div style="padding: 0 12px; margin-bottom: 1rem;">
+            <p style="font-size: 0.8rem; color: var(--admin-primary); font-weight: 700;">COMMAND CENTER</p>
+        </div>
+        <a href="admin-dashboard.html" class="nav-item"><i class='bx bxs-dashboard'></i> Overview</a>
+        <a href="admin-data.html" class="nav-item"><i class='bx bx-table'></i> Data Manager</a>
+        <a href="admin-payments.html" class="nav-item"><i class='bx bx-credit-card'></i> Payments</a>
+        <a href="admin-resources.html" class="nav-item"><i class='bx bx-news'></i> Post Resources</a>
+        <a href="admin-settings.html" class="nav-item active"><i class='bx bx-slider-alt'></i> Global Config</a>
+        <div style="margin-top: auto;">
+            <a href="dashboard.html" class="nav-item"><i class='bx bx-arrow-back'></i> User View</a>
+            <a href="#" class="nav-item" id="btn-logout" style="color: #EF4444;"><i class='bx bx-power-off'></i> Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        
+        <!-- LEFT: CONFIG PANEL -->
+        <div class="config-panel">
+            <div class="panel-header">
+                <h2><i class='bx bx-globe'></i> Platform Config</h2>
+            </div>
+            
+            <form id="config-form">
+                <div class="form-group">
+                    <label class="form-label">Admin PayPal Email (Wallet)</label>
+                    <div class="input-group">
+                        <i class='bx bxl-paypal'></i>
+                        <input type="email" id="conf-paypal" class="form-input" placeholder="payment@admin.com">
+                    </div>
+                    <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:5px;">Displayed on Upgrade page.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Support Email</label>
+                    <div class="input-group">
+                        <i class='bx bx-envelope'></i>
+                        <input type="email" id="conf-email" class="form-input" placeholder="support@epoch19.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number</label>
+                    <div class="input-group">
+                        <i class='bx bxl-whatsapp'></i>
+                        <input type="text" id="conf-whatsapp" class="form-input" placeholder="1234567890">
+                    </div>
+                    <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:5px;">No spaces/symbols (e.g. 254712345678)</small>
+                </div>
+
+                <button type="submit" class="btn-save" id="btn-save-conf">
+                    <i class='bx bx-save'></i> Update System
+                </button>
+            </form>
+        </div>
+
+        <!-- RIGHT: USER MANAGER -->
+        <div class="users-panel">
+            <div class="panel-header toolbar">
+                <h2><i class='bx bx-user-voice'></i> User Manager</h2>
+                <div class="input-group search-bar">
+                    <i class='bx bx-search'></i>
+                    <input type="text" id="user-search" class="form-input" placeholder="Find user...">
+                </div>
+            </div>
+
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Profile</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- Users Loaded Here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        Epoch19 Admin System &copy; 2025
+    </footer>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlWM9hfnreQMAXze5q5o2jr_Z9ekYxE2M",
+            authDomain: "epoch19-479ca.firebaseapp.com",
+            projectId: "epoch19-479ca",
+            storageBucket: "epoch19-479ca.firebasestorage.app",
+            messagingSenderId: "608813445980",
+            appId: "1:608813445980:web:08ab4dedc8ddc71e670799",
+            measurementId: "G-JKR6K20LSL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let allUsers = [];
+
+        // 1. Auth Guard
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = "login.html"; return; }
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists() || userDoc.data().role !== 'admin') {
+                window.location.href = "dashboard.html";
+            } else {
+                loadConfig();
+                loadUsers();
+            }
+        });
+
+        // 2. Load Config
+        async function loadConfig() {
+            try {
+                const docSnap = await getDoc(doc(db, "config", "main_settings"));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('conf-paypal').value = data.admin_paypal || "";
+                    document.getElementById('conf-email').value = data.contact_email || "";
+                    document.getElementById('conf-whatsapp').value = data.contact_whatsapp || "";
+                }
+            } catch (e) { console.error("Config load error", e); }
+        }
+
+        // 3. Save Config
+        document.getElementById('config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-conf');
+            btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Saving...`;
+
+            try {
+                await setDoc(doc(db, "config", "main_settings"), {
+                    admin_paypal: document.getElementById('conf-paypal').value,
+                    contact_email: document.getElementById('conf-email').value,
+                    contact_whatsapp: document.getElementById('conf-whatsapp').value
+                }, { merge: true });
+
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success', 
+                    title: 'System Config Updated', background: '#020617', color:'#fff', timer: 2000, showConfirmButton: false
+                });
+            } catch (error) {
+                Swal.fire('Error', 'Update Failed', 'error');
+            } finally {
+                btn.innerHTML = `<i class='bx bx-save'></i> Update System`;
+            }
+        });
+
+        // 4. Load Users
+        async function loadUsers() {
+            try {
+                const snapshot = await getDocs(collection(db, "users"));
+                allUsers = [];
+                snapshot.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+                renderUsers(allUsers);
+            } catch (e) { console.error("User load error", e); }
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = "";
+
+            users.forEach(u => {
+                const initials = u.fullName ? u.fullName.substring(0,2).toUpperCase() : '??';
+                const roleBadge = u.role === 'admin' ? '<span class="badge badge-admin">Admin</span>' : '<span class="badge badge-free">User</span>';
+                const statusBadge = u.status === 'premium' 
+                    ? '<span class="badge badge-premium">Premium</span>' 
+                    : '<span class="badge badge-free">Free</span>';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-avatar">${initials}</div>
+                            <div class="user-info">
+                                <div>${u.fullName || 'No Name'}</div>
+                                <div>${u.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${roleBadge}</td>
+                    <td>${statusBadge}</td>
+                    <td class="action-cell">
+                        <button class="btn-mini btn-upg" title="Toggle Premium" onclick="togglePremium('${u.id}', '${u.status}')">
+                            <i class='bx bx-crown'></i>
+                        </button>
+                        <button class="btn-mini btn-del" title="Ban User" onclick="banUser('${u.id}')">
+                            <i class='bx bx-block'></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 5. Search
+        document.getElementById('user-search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allUsers.filter(u => 
+                (u.fullName && u.fullName.toLowerCase().includes(term)) || 
+                (u.email && u.email.toLowerCase().includes(term))
+            );
+            renderUsers(filtered);
+        });
+
+        // 6. User Actions
+        window.togglePremium = async (uid, currentStatus) => {
+            const newStatus = currentStatus === 'premium' ? 'free' : 'premium';
+            try {
+                await updateDoc(doc(db, "users", uid), { status: newStatus });
+                loadUsers(); // Reload table
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success', 
+                    title: `User set to ${newStatus.toUpperCase()}`, background: '#020617', color:'#fff', timer: 1500, showConfirmButton: false
+                });
+            } catch (e) { Swal.fire('Error', 'Update failed', 'error'); }
+        };
+
+        window.banUser = (uid) => {
+            Swal.fire({
+                title: 'Ban User?',
+                text: "This removes their database record. They will lose access immediately.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#1e293b',
+                background: '#020617', color: '#fff'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await deleteDoc(doc(db, "users", uid));
+                    loadUsers();
+                    Swal.fire({
+                        toast: true, position: 'top-end', icon: 'success', 
+                        title: 'User Banned', background: '#020617', color:'#fff', timer: 1500, showConfirmButton: false
+                    });
+                }
+            });
+        };
+
+        // Nav Toggle
+        window.toggleNav = () => document.getElementById('navDrawer').classList.toggle('active');
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>
+</body>
+</html>
