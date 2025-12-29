@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -224,7 +225,8 @@
 
         /* Data Colors */
         .val-deaths { color: var(--alert); font-weight: 700; }
-        .val-mild { color: var(--success); }
+        .val-mild { color: var(--text-muted); }
+        .val-success { color: var(--success); }
         .val-serious { color: var(--gold); }
 
         /* --- 7. OVERLAYS (Paywall & Loader) --- */
@@ -394,11 +396,13 @@
             <div class="table-scroll">
                 <table class="data-table">
                     <thead>
+                        <!-- UPDATED: ORDER: Date - Country - Cases - Deaths - Recovered - Mild - Serious -->
                         <tr>
                             <th data-sort="Date">Date <i class='bx bx-sort'></i></th>
                             <th data-sort="Country">Country <i class='bx bx-sort'></i></th>
                             <th data-sort="Cases">Cases <i class='bx bx-sort'></i></th>
                             <th data-sort="Deaths">Deaths <i class='bx bx-sort'></i></th>
+                            <th data-sort="Recovered">Recovered <i class='bx bx-sort'></i></th>
                             <th data-sort="Mild">Mild <i class='bx bx-sort'></i></th>
                             <th data-sort="Serious">Serious <i class='bx bx-sort'></i></th>
                         </tr>
@@ -531,7 +535,7 @@
             tbody.innerHTML = "";
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #94A3B8;">No records found matching query.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #94A3B8;">No records found matching query.</td></tr>`;
                 return;
             }
 
@@ -540,11 +544,13 @@
                 const deathsClass = (Number(row.Deaths) > 1000) ? 'val-deaths' : '';
                 const seriousClass = (Number(row.Serious) > 500) ? 'val-serious' : '';
                 
+                // UPDATED: Added Recovered Column logic
                 tr.innerHTML = `
                     <td style="color: var(--admin-accent);">${row.Date || '--'}</td>
                     <td><span style="font-weight:600; color:#fff">${row.Country}</span></td>
                     <td>${Number(row.Cases).toLocaleString()}</td>
                     <td class="${deathsClass}">${Number(row.Deaths).toLocaleString()}</td>
+                    <td class="val-success">${Number(row.Recovered || 0).toLocaleString()}</td>
                     <td class="val-mild">${Number(row.Mild).toLocaleString()}</td>
                     <td class="${seriousClass}">${Number(row.Serious).toLocaleString()}</td>
                 `;
@@ -573,7 +579,7 @@
                 let valA = a[column];
                 let valB = b[column];
 
-                if (['Cases', 'Deaths', 'Mild', 'Serious'].includes(column)) {
+                if (['Cases', 'Deaths', 'Recovered', 'Mild', 'Serious'].includes(column)) {
                     valA = Number(valA) || 0;
                     valB = Number(valB) || 0;
                 } else if (column === 'Date') {
@@ -592,10 +598,12 @@
         function exportCSV() {
             if (globalData.length === 0) return;
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Date,Country,Cases,Deaths,Mild,Serious\n";
+            // UPDATED: CSV Header
+            csvContent += "Date,Country,Cases,Deaths,Recovered,Mild,Serious\n";
 
             globalData.forEach(row => {
-                const rowStr = `${row.Date},${row.Country},${row.Cases},${row.Deaths},${row.Mild},${row.Serious}`;
+                // UPDATED: CSV Row
+                const rowStr = `${row.Date},${row.Country},${row.Cases},${row.Deaths},${row.Recovered || 0},${row.Mild},${row.Serious}`;
                 csvContent += rowStr + "\n";
             });
 
