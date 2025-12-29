@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -313,12 +314,15 @@
             <div class="table-scroll">
                 <table>
                     <thead>
+                        <!-- UPDATED COLUMN ORDER -->
                         <tr>
                             <th>Date</th>
                             <th>Country</th>
                             <th>Cases</th>
                             <th>Deaths</th>
+                            <th>Recovered</th>
                             <th>Mild</th>
+                            <th>Serious</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -376,12 +380,16 @@
                     const data = docSnap.data();
                     const id = docSnap.id;
                     const tr = document.createElement('tr');
+                    
+                    // UPDATED: Order to match Date - Country - Cases - Deaths - Recovered - Mild - Serious
                     tr.innerHTML = `
                         <td>${data.Date}</td>
                         <td>${data.Country}</td>
                         <td contenteditable="true" onblur="updateCell('${id}', 'Cases', this)">${data.Cases}</td>
                         <td contenteditable="true" onblur="updateCell('${id}', 'Deaths', this)" style="color:#EF4444">${data.Deaths}</td>
+                        <td contenteditable="true" onblur="updateCell('${id}', 'Recovered', this)" style="color:#10B981">${data.Recovered || 0}</td>
                         <td contenteditable="true" onblur="updateCell('${id}', 'Mild', this)">${data.Mild}</td>
+                        <td contenteditable="true" onblur="updateCell('${id}', 'Serious', this)">${data.Serious || 0}</td>
                         <td class="action-cell">
                             <i class='bx bx-trash btn-icon btn-del' onclick="deleteRecord('${id}')"></i>
                         </td>
